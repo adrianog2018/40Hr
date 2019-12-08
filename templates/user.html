@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Logged
+{% endblock %}
+
+{% block main %}
+    <h1>Hello {{session.username}}, you are logged in</h1>
+    <a href="/">Clic here to go to time managment</a>
+{% endblock %}

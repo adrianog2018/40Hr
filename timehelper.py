@@ -22,4 +22,3 @@ class Time:
     
     def reset_hours(self):
         self.time_left = 40
-    
