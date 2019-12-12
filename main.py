@@ -22,9 +22,7 @@ wed = today - datetime.timedelta(idx-3)
 thu = today - datetime.timedelta(idx-4)
 fri = today - datetime.timedelta(idx-5)
 sat = today - datetime.timedelta(idx-6)
-# print(sun) 
-# print(mon)   
-# print(tue) 
+
 
 # Configure application
 app = Flask(__name__)
@@ -64,7 +62,9 @@ Session(app)
 @login_required
 def index():
     """Show user dashboard and current week"""
-    return render_template("index.html",sun=sun,mon=mon,tue=tue,wed=wed,thu=thu,fri=fri,sat=sat)
+    days = [ sun,mon,tue,wed,thu,fri,sat ]
+    timehead = ["DATE","IN DAY", "OUT LUNCH", "IN LUNCH", "OUT DAY", "TOTAL"]
+    return render_template("index.html", days = days, timehead = timehead)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -141,7 +141,7 @@ def login():
         session['user_id'] = user
 
         # Redirect user to home page
-        return redirect(url_for("user"))
+        return redirect(url_for("user", user=user))
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -163,8 +163,8 @@ def logout():
 @login_required
 def user():
     """Show user dashboard"""
-    username = request.args.get('username')
-    return render_template("user.html", usernamed = username)
+    
+    return render_template("user.html", user= user)
 
 def errorhandler(e):
     """Handle error"""
