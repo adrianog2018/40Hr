@@ -32,47 +32,149 @@
         <tr>
         {% for day in days %}
         <tr>
-            <th scope="col">{{day}}</th>
+            <th scope="col" id={{day}}>{{day}}</th>
             {% for j in range(4)%}
             <td>
-            <select>
-                    {% for hour in range(0,24) %}
-                        <option value="{{hour}}">{{hour}}</option>
-                    {% endfor %}                        
-            </select> :
-            <select>
-                {% for minute in range(0,60) %}
-                    <option value="{{minute}}">{{minute}}</option>
-                {% endfor %}                        
-            </select>
+            <input id="hours{{day}}_{{j}}" data-day="{{day}}" class="hourSelect" 
+                   type="number" min="00" max="23" value="0">:
+            <input id="minutes{{day}}_{{j}}" data-day="{{day}}" class="minuteSelect"
+                   type="number" min="00" max="59" value="0">
             </td>
             {% endfor %}
-            <td value="{{day}}">Total</td>
+            <td id="thours{{day}}" class="total_column_hours">0</td>
         </tr>
         {% endfor %}
 
         <tr>
             <th>TOTAL HOURS</th>
-            <th>value total</th>
+            <th id="grandTotal">0</th>
         </tr>
         <br>
         <tr>
             <th>Remaining time</th>
-            <th>40- total</th>
+            <th id="remaningTotal">
+                <span id="remaining">40</span>
+                 out of 40 hours left
+            </th>
         </tr>
-
+        
     </tbody>
 </table>
-
-
 <script>
-    $('select').change(function () {
-        var total1 = 0;
-        $('select :selected').each(function () {
-            total1 += Number($(this).val());
+    function updateGrandTotal(){
+        var allHours = $('.total_column_hours');
+        var allMinutes = $('.total_column_minutes');
+        var sumTotal = 0;
+        allHours.each(function(item){
+            var thisTotal = parseInt($(allHours[item]).text());
+            sumTotal += thisTotal;
+        })
+        allMinutes.each(function(item){
+            var thisTotal = parseInt($(allMinutes[item]).text());
+            sumTotal += (thisTotal/60);
+        })
+
+        sumTotal = sumTotal > 0 ? sumTotal : 0
+
+        $("#grandTotal").text(sumTotal);
+        $("#remaining").text( 40 - sumTotal );
+    }
+
+    function toDoubleDigit(num){
+        if( String(num).length < 2 ){ return 0+String(num); }
+        return String(num);
+    }
+
+    function getDuration( timein, timeout ){
+        timein = "10/10/2019 "+timein;
+        timeout = "10/10/2019 "+timeout;
+
+        var diff = moment.duration(moment(timeout).diff(moment(timein)));
+        return [diff.asHours().toFixed(0), diff.minutes(), diff.seconds()].join(':');
+    }
+
+    function updateTime(item){
+        var row = item.closest('tr'),
+            current_total_hours = row.find('.total_column_hours'),
+            allHourSelects = row.find('.hourSelect'),
+            in_day_h = 0,
+            in_lunch_h = 0,
+            out_lunch_h = 0,
+            out_day_h = 0,
+            in_day_m = 0,
+            in_lunch_m = 0,
+            out_lunch_m = 0,
+            out_day_m = 0;
+
+        allHourSelects.each(function(item){            
+            var thisHour = parseInt($("#"+allHourSelects[item].id).val());
+            if( allHourSelects[item].id.split('_')[1] == 0 ){ in_day_h += thisHour;} 
+            if( allHourSelects[item].id.split('_')[1] == 1 ){ out_lunch_h += thisHour;} 
+            if( allHourSelects[item].id.split('_')[1] == 2 ){ in_lunch_h += thisHour;} 
+            if( allHourSelects[item].id.split('_')[1] == 3 ){ out_day_h += thisHour;} 
         });
-        $("#total1").html(total1);
+
+        var new_hour = (out_lunch_h - in_day_h) + (out_day_h - in_lunch_h);
+
+        var current_total_minutes = row.find('.total_column_minutes'),
+            allMinuteSelects = row.find('.minuteSelect'),
+            new_minutes = 0;
+
+        allMinuteSelects.each(function(item){            
+            var thisMinutes = parseInt($("#"+allMinuteSelects[item].id).val());
+            new_minutes += thisMinutes;
+            if( allMinuteSelects[item].id.split('_')[1] == 0 ){ in_day_m += thisMinutes;} 
+            if( allMinuteSelects[item].id.split('_')[1] == 1 ){ out_lunch_m += thisMinutes;} 
+            if( allMinuteSelects[item].id.split('_')[1] == 2 ){ in_lunch_m += thisMinutes;} 
+            if( allMinuteSelects[item].id.split('_')[1] == 3 ){ out_day_m += thisMinutes;} 
+        });
+            
+        in_day = toDoubleDigit(in_day_h)+":"+toDoubleDigit(in_day_m);
+        out_lunch = toDoubleDigit(out_lunch_h)+":"+toDoubleDigit(out_lunch_m);
+        in_lunch = toDoubleDigit(in_lunch_h)+":"+toDoubleDigit(in_lunch_m);
+        out_day = toDoubleDigit(out_day_h)+":"+toDoubleDigit(out_day_m);
+        
+        var morning = getDuration( in_day+":00", out_lunch+":00");
+        var afternoon = getDuration( in_lunch+":00", out_day+":00");
+
+        var durationInMinutes = (moment.duration(morning).add(afternoon)._milliseconds / 1000) /60;
+
+
+        current_total_hours.text( 
+            toDoubleDigit(Math.floor(durationInMinutes / 60)) + 
+            ":" + 
+            toDoubleDigit( (durationInMinutes % 60) ) 
+        );
+    }
+
+    $('.hourSelect').change( function() {
+        updateTime($(this))
+        updateGrandTotal();
+    });
+
+    $("#time").change( function(){
+        console.log($(this).val())
+    } )
+
+    $('.minuteSelect').change( function() {
+        updateTime($(this))
+        updateGrandTotal();
     });
 </script>
+<script>
+
+</script>
+
+<!-- <script>
+        
+        $('.hourSelect{{day}}').change(function () {
+        var hh = 0;
+        $('select :selected').each(function () {
+            hh += Number($(this).val());
+        });
+        $("#hh{{day}}").html(hh);
+    });
+</script> -->
+
 
 {% endblock %}

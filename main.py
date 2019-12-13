@@ -133,15 +133,16 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         # Ensure username exists and password is correct
-        if not username or not check_password_hash(user.password, password): 
+        if not user or not check_password_hash(user.password, password): 
             flash('Please check your login details and try again.')
             return apology("invalid username and/or password", 403)
 
         # Remember which user has logged in
         session['user_id'] = user
+        usuario = session['user_id']
 
         # Redirect user to home page
-        return redirect(url_for("user", user=user))
+        return redirect(url_for("user", user=usuario))
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -162,9 +163,9 @@ def logout():
 @app.route("/user")
 @login_required
 def user():
-    """Show user dashboard"""
-    
-    return render_template("user.html", user= user)
+    """Show user dashboard""" 
+    usuario = session['user_id']
+    return render_template("user.html",user=usuario)
 
 def errorhandler(e):
     """Handle error"""
@@ -178,6 +179,7 @@ for code in default_exceptions:
 @app.context_processor
 def inject_today_date():
     return {'today_date': datetime.date.today()}
+
 
 if __name__ == "__main__":
   app.run()
